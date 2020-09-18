@@ -2,6 +2,7 @@ import math
 import random
 import time
 
+""" cs50ai jordan lieber problem 4b nim """
 
 class Nim():
 
@@ -101,7 +102,17 @@ class NimAI():
         Return the Q-value for the state `state` and the action `action`.
         If no Q-value exists yet in `self.q`, return 0.
         """
-        raise NotImplementedError
+
+
+
+        if (tuple(state), action) not in self.q:
+            return 0
+
+        else:
+            return self.q[(tuple(state), action)]
+
+
+
 
     def update_q_value(self, state, action, old_q, reward, future_rewards):
         """
@@ -117,8 +128,15 @@ class NimAI():
         where `old value estimate` is the previous Q-value,
         `alpha` is the learning rate, and `new value estimate`
         is the sum of the current reward and estimated future rewards.
+
+        so value for update is:
+        Q(s,a) <-- Q(s,a) + a((r + maxa' Q(s',a')) - Q(s,a))
         """
-        raise NotImplementedError
+
+
+        #just plug in varibales into our given formula
+        self.q[(tuple(state), action)] = old_q + self.alpha *((reward + future_rewards) - old_q)
+
 
     def best_future_reward(self, state):
         """
@@ -130,7 +148,18 @@ class NimAI():
         Q-value in `self.q`. If there are no available actions in
         `state`, return 0.
         """
-        raise NotImplementedError
+
+        #get list of avaiable actoins
+        available_actions = list(Nim.available_actions(state))
+
+        max_reward = 0
+
+        #get max value of all actions
+        for action in available_actions:
+            max_reward = max(self.get_q_value(state, action), max_reward)
+
+        return max_reward
+
 
     def choose_action(self, state, epsilon=True):
         """
@@ -147,7 +176,42 @@ class NimAI():
         If multiple actions have the same Q-value, any of those
         options is an acceptable return value.
         """
-        raise NotImplementedError
+
+        available_actions = list(Nim.available_actions(state))
+
+        best_value = 0
+
+        best_action = available_actions[0]
+
+        #get best action by looping through available actoin and checking whether
+        # q value for new action is greater than q value for then-current best action
+        for action in available_actions:
+            if (tuple(state), action) not in self.q:
+                self.q[(tuple(state), action)] = 0
+
+            if self.q[(tuple(state), action)] > self.q[(tuple(state), best_action)]:
+                best_action = action
+
+
+        if epsilon == True:
+
+            #get random action from list of avaiable actions
+            random_action = random.choice(available_actions)
+
+            #put best action and ranodm action into list
+            choices = [best_action, random_action]
+
+            #choose best action with prob 1 - epsilon and random choice with prob epsilon
+            choice = random.choices(choices, weights = ((1 - self.epsilon), self.epsilon), k=1)[0]
+
+            print(f"choice{choice} \n")
+
+            return choice
+
+        print(f"best_action: {best_action} \n")
+
+        return best_action
+
 
 
 def train(n):
